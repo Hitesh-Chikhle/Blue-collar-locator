@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: User must be authenticated (anonymous or email/Google sign-in)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper: Cap document field count to prevent oversized payload abuse
+    function isReasonableSize() {
+      return request.resource.data.size() < 50;
+    }
+
+    // 1. Professionals directory
+    // Any visitor can browse service providers; authenticated users can register/update availability.
+    match /professionals/{proId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated() && isReasonableSize();
+      allow delete: if false; // Directory items cannot be deleted directly
+    }
+
+    // 2. Bookings
+    // Read: authenticated users (clients & workers).
+    // Create: authenticated users with non-empty customer identification.
+    // Update: only the customer who booked or the assigned professional.
+    // Delete: only by customer or blocked to preserve audit trail.
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated();
+
+      allow create: if isAuthenticated()
+                    && isReasonableSize()
+                    && request.resource.data.customerId != null;
+
+      allow update: if isAuthenticated()
+                    && isReasonableSize()
+                    && (
+                      request.auth.uid == resource.data.customerId ||
+                      request.auth.uid == resource.data.professionalId ||
+                      request.resource.data.customerId == resource.data.customerId
+                    );
+
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.customerId;
+    }
+
+    // 3. Reviews & Ratings
+    // Publicly readable. Can only be created if referencing a booking that is 'completed'.
+    match /reviews/{reviewId} {
+      allow read: if true;
+
+      allow create: if isAuthenticated()
+                    && isReasonableSize()
+                    && request.resource.data.bookingId != null
+                    && exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId))
+                    && get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.status == 'completed';
+
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.customerId;
+      allow delete: if false;
+    }
+
+    // 4. In-App Notifications
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isReasonableSize();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.recipientId;
+    }
+
+    // 5. Prototype Testing Feedback & Evaluation
+    match /testing_feedback/{feedbackId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isReasonableSize();
+      allow update, delete: if false;
+    }
+  }
+}

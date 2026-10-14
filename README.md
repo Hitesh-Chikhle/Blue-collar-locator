@@ -227,40 +227,70 @@ If transitioning this Design Thinking prototype to a commercial production platf
 ## 9. File Structure
 
 ```
-Ramya's Project/
+Blue-collar-locator/
 ├── index.html              # Main application shell with semantic views & accessible modals
-├── README.md               # Complete project documentation & faculty guide
+├── README.md               # Complete project documentation & deployment guide
+├── firebase.json           # Firebase Hosting & Firestore rules configuration
+├── .firebaserc             # Firebase project alias binding
+├── firestore.rules         # Prototype Cloud Firestore security rules
 ├── css/
 │   ├── base.css            # CSS reset, typography, and global layout
 │   ├── variables.css       # Design tokens (colors, spacing, shadows, radius, transitions)
 │   ├── components.css      # Buttons, cards, badges, modals, toasts, progress bars, score pills
-│   └── layout.css          # View panels, grids, and responsive media queries (360/768/1280px)
-├── js/
-│   ├── config.js           # Configuration flag (LocalStorage vs. Firestore toggle)
-│   ├── state.js            # Central reactive store, seeding, and dual-adapter data service
-│   ├── data.js             # Seed professionals (10 realistic fictional records with coordinates)
-│   ├── map.js              # Leaflet MapController, Haversine proximity math, Nominatim geocoder
-│   ├── ui.js               # Toast system, accessible modal focus trapping, SVG icons
-│   ├── booking.js          # 8-step booking wizard, status tracking, bookmarks, reviews
-│   ├── worker.js           # Professional dashboard workstation, presence heartbeats, dispatch
-│   └── app.js              # Application orchestrator, router, debounced search, demo controls
-└── scratch/
-    └── test_chunk6.mjs     # Automated headless Chrome test suite verifying all Chunk 6 deliverables
+│   ├── layout.css          # View panels, grids, and responsive media queries (360/768/1280px)
+│   └── map.css             # Leaflet styling, custom pins & pulsing GPS markers
+└── js/
+    ├── config.js           # Configuration flag & Firebase keys isolation
+    ├── state.js            # Central reactive store, seeding, and dual-adapter data service
+    ├── data.js             # Seed professionals (10 realistic fictional records with coordinates)
+    ├── map.js              # Leaflet MapController, Haversine proximity math, Nominatim geocoder
+    ├── ui.js               # Toast system, accessible modal focus trapping, SVG icons
+    ├── booking.js          # 8-step booking wizard, status tracking, bookmarks, reviews
+    ├── worker.js           # Professional dashboard workstation, presence heartbeats, dispatch
+    └── app.js              # Application orchestrator, router, debounced search, demo controls
 ```
 
 ---
 
-## 10. Automated Test Verification Summary
+## 10. Deployment Guide
 
-To execute the automated regression test suite:
-```bash
-node scratch/test_chunk6.mjs
-```
-**Test Results (Verified October 2026):**
-- [x] **Mobile 360px Viewport:** Zero horizontal scroll / overflow passed.
-- [x] **Tablet 768px Viewport:** Zero horizontal scroll / overflow passed.
-- [x] **Desktop 1280px Viewport:** Zero horizontal scroll / overflow passed.
-- [x] **Prototype Testing View:** Evaluation submission, aggregate score calculation, and dynamic rendering passed.
-- [x] **Faculty Demo Modal:** Interactive checklist persistence and clean baseline reset passed.
-- [x] **Search Performance:** 300ms debounce verified with zero refilter thrashing.
-- [x] **Console Audit:** 0 uncaught errors or exceptions encountered.
+### Option A: Firebase Hosting (Recommended)
+
+Follow these steps to deploy free on Google Firebase Hosting:
+
+1. **Install Firebase CLI** (if not already installed):
+   ```bash
+   npm install -g firebase-tools
+   ```
+
+2. **Authenticate with Google**:
+   ```bash
+   firebase login
+   ```
+
+3. **Select or Bind Your Project**:
+   ```bash
+   firebase use --add
+   ```
+   *(Select your Firebase project created in the Firebase Console, or update `.firebaserc` with your Project ID).*
+
+4. **Deploy Hosting & Security Rules**:
+   ```bash
+   firebase deploy --only hosting,firestore:rules
+   ```
+
+5. **Authorize Domain for Firebase Authentication**:
+   - In the [Firebase Console](https://console.firebase.google.com/), go to **Authentication** &rarr; **Settings** &rarr; **Authorized domains**.
+   - Add your live Firebase Hosting URL (e.g. `your-project-id.web.app`).
+
+---
+
+### Option B: Netlify Drop (Zero Terminal / Drag-and-Drop Fallback)
+
+If you prefer a 100% GUI deployment without terminal:
+
+1. Open [Netlify Drop](https://app.netlify.com/drop) in your browser.
+2. Drag and drop the entire project folder into the upload target.
+3. Your site is instantly live with free HTTPS and an address like `https://random-name.netlify.app`.
+4. To enable Firebase features on your Netlify domain, add your Netlify domain (`random-name.netlify.app`) under **Firebase Console > Authentication > Settings > Authorized domains**.
+
