@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blue Collar — Local Service Finder</title>
+  <meta name="description" content="Design thinking college project connecting residents, students, and newcomers with local service professionals.">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/map.css">
+
+  <!-- Leaflet OpenStreetMap CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+  <!-- Accessible Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- App Shell -->
+  <div class="app-container">
+    
+    <!-- Site Header -->
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <!-- Logo / Brand -->
+        <a href="#home" class="brand" aria-label="Blue Collar Home">
+          <div class="brand-icon" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+          </div>
+          <div class="brand-titles">
+            <span class="brand-name">Blue Collar</span>
+            <span class="brand-tag">Local Service Finder</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="desktop-nav" aria-label="Main Navigation">
+          <a href="#home" class="nav-link is-active" data-nav="home">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Home</span>
+          </a>
+          <a href="#services" class="nav-link" data-nav="services">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Find Services</span>
+          </a>
+          <!-- Dynamic Role Link: Switched via JS between "My Bookings" and "Worker Dashboard" -->
+          <a href="#bookings" class="nav-link" id="nav-role-link" data-nav="bookings">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span id="nav-role-link-text">My Bookings</span>
+          </a>
+          <a href="#testing" class="nav-link" data-nav="testing">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>Prototype Testing</span>
+          </a>
+        </nav>
+
+        <!-- Header Actions: Language, Role Switcher, Notification Center, Live Sync Indicator, Mobile Menu -->
+        <div class="header-actions">
+          
+          <!-- Live Sync Indicator Badge (Status is never shown by color alone) -->
+          <div class="sync-indicator" id="sync-indicator-badge" title="Real-time multi-tab or Firestore live sync">
+            <span class="sync-dot" id="sync-dot-icon" aria-hidden="true"></span>
+            <span id="sync-indicator-text">Live Sync: Local (Active)</span>
+          </div>
+
+          <!-- Notification Center Popover & Bell -->
+          <div class="notif-wrapper" style="position: relative;">
+            <button type="button" class="btn btn-subtle notif-bell-btn" id="notif-bell-btn" aria-label="Open in-app notifications" aria-expanded="false" title="In-App Notifications">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <span class="notif-badge-count" id="notif-badge-count" style="display: none;">0</span>
+            </button>
+            <div class="notif-popover" id="notif-popover" role="region" aria-label="In-App Notifications">
+              <div class="notif-header">
+                <div>
+                  <div style="font-weight: 700; font-size: 13px;">In-App Notifications</div>
+                  <div style="font-size: 10px; color: var(--text-subtle);">Real-time dispatch & status events</div>
+                </div>
+                <button type="button" class="btn btn-subtle btn-sm" id="btn-mark-all-read" style="font-size: 11px; padding: 2px 6px;">Mark all read</button>
+              </div>
+              <div class="notif-list" id="notif-list-container">
+                <div style="padding: var(--space-4); text-align: center; color: var(--text-subtle); font-size: 12px;">
+                  No notifications yet.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Language Selector Placeholder -->
+          <div class="language-picker-wrap">
+            <label for="lang-select" class="sr-only">Select Language</label>
+            <select id="lang-select" class="form-select" style="min-height: 36px; padding: 4px 8px; font-size: var(--font-size-xs);" aria-label="Select display language">
+              <option value="en" selected>🌐 English</option>
+              <option value="hi">🌐 हिंदी (Hindi)</option>
+              <option value="kn">🌐 ಕನ್ನಡ (Kannada)</option>
+            </select>
+          </div>
+
+          <!-- Role Switcher Toggle -->
+          <div class="role-switcher-container" role="radiogroup" aria-label="User Persona Switcher">
+            <button type="button" class="role-btn is-active" id="btn-role-customer" role="radio" aria-checked="true" title="Switch to Customer Mode">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Customer</span>
+            </button>
+            <button type="button" class="role-btn" id="btn-role-pro" role="radio" aria-checked="false" title="Switch to Professional Mode">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              <span>Professional</span>
+            </button>
+          </div>
+
+          <!-- Mobile Hamburger Toggle -->
+          <button type="button" class="menu-toggle-btn" id="mobile-menu-open-btn" aria-label="Open navigation menu" aria-expanded="false">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Offline Connection Warning Banner (Requirement 7) -->
+    <div id="offline-connection-banner" class="offline-banner" role="alert" aria-live="assertive">
+      <div style="display: flex; align-items: center; gap: var(--space-2);">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+        <span><strong>Connection Lost:</strong> You are currently offline. Changes will queue in local storage until reconnected.</span>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" id="btn-retry-connection" style="background: #FFFFFF; font-size: 11px; padding: 2px 8px;">
+        Retry Connection
+      </button>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+      <div class="drawer-backdrop" id="drawer-backdrop"></div>
+      <div class="drawer-panel" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+        <div class="drawer-header">
+          <div class="brand">
+            <div class="brand-icon">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+            </div>
+            <span class="brand-name">Blue Collar</span>
+          </div>
+          <button type="button" class="btn btn-subtle btn-sm" id="mobile-menu-close-btn" aria-label="Close menu">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <nav class="drawer-nav">
+          <a href="#home" class="nav-link is-active" data-drawer-nav="home">Home</a>
+          <a href="#services" class="nav-link" data-drawer-nav="services">Find Services</a>
+          <a href="#bookings" class="nav-link" id="drawer-role-link" data-drawer-nav="bookings">My Bookings</a>
+          <a href="#testing" class="nav-link" data-drawer-nav="testing">Prototype Testing</a>
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin: var(--space-2) 0;">
+          <a href="#about" class="nav-link" data-drawer-nav="about">Design Thinking Concept</a>
+          <a href="#contact" class="nav-link" data-drawer-nav="contact">Contact & Feedback</a>
+          <a href="#help" class="nav-link" data-drawer-nav="help">Help & FAQs</a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Demo Role Entry & Context Banner -->
+    <div class="demo-banner" role="complementary" aria-label="Demo Role Switcher Banner">
+      <div class="demo-banner-inner">
+        <div class="demo-banner-text">
+          <span class="badge badge-teal">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+            <span>College Prototype</span>
+          </span>
+          <span>Active Role: <strong id="active-role-display">Customer (Resident/Student)</strong></span>
+        </div>
+        <div class="demo-role-quick-switches">
+          <span>Quick Enter:</span>
+          <button type="button" class="btn btn-outline btn-sm" id="quick-enter-customer" style="min-height: 32px;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Enter as Customer</span>
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" id="quick-enter-pro" style="min-height: 32px;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            <span>Enter as Professional</span>
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-open-demo-panel" style="min-height: 32px; border-color: var(--accent-teal); color: var(--accent-teal);">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Faculty Demo Script & Reset</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area with Hash-Based Views -->
+    <main id="main-content" class="main-content">
+      
+      <!-- ====================================================================
+           VIEW: HOME (#home)
+           ==================================================================== -->
+      <section id="view-home" class="view-panel is-active" aria-labelledby="home-heading">
+        
+        <!-- Hero Section -->
+        <div class="hero-section">
+          <div class="hero-badge-row">
+            <span class="badge badge-teal">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+              <span>Hyper-Local • Free Open Source Platform</span>
+            </span>
+            <span class="badge badge-default">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span>Instant Geolocation & OpenStreetMap</span>
+            </span>
+          </div>
+
+          <h1 id="home-heading" class="hero-headline">Trusted Local Help, Just a Few Clicks Away.</h1>
+          <p class="hero-subtext">
+            Connecting residents, students, PG tenants, and newcomers with dependable local electricians, plumbers, carpenters, cleaners, and mechanics. Real proximity, transparent estimates, and zero middleman inflation.
+          </p>
+
+          <!-- Interactive Location & Search Bar -->
+          <div class="hero-search-card">
+            <!-- Location Selector with Nominatim Autocomplete & Geolocation -->
+            <div class="location-search-wrap" style="flex: 1.1;">
+              <div class="hero-search-field">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: var(--accent-teal); margin-right: var(--space-2);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <input type="text" id="hero-location-input" placeholder="Enter your area or city (e.g. Indiranagar, Bengaluru)" autocomplete="off" aria-label="Enter location address">
+                <button type="button" class="btn btn-subtle btn-sm" id="btn-use-geolocation" title="Detect your exact location via browser GPS" style="white-space: nowrap; margin-left: 4px;">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  <span>Locate Me</span>
+                </button>
+              </div>
+              <!-- Autocomplete suggestions dropdown -->
+              <div class="suggestions-dropdown" id="hero-location-suggestions" role="listbox" aria-label="Location suggestions"></div>
+            </div>
+
+            <!-- Service Need Search Input -->
+            <div class="hero-search-field" style="flex: 1.2;">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: var(--text-subtle); margin-right: var(--space-2);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="hero-service-search-input" placeholder="What service do you need? (e.g. tap leak, AC cooling)" aria-label="Search service need">
+            </div>
+
+            <!-- Find Service Primary Action -->
+            <button type="button" class="btn btn-primary btn-lg" id="btn-hero-find-services">
+              <span>Find a Service</span>
+            </button>
+          </div>
+
+          <!-- Hero Action CTAs & Emergency Button -->
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3);">
+            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+              <a href="#services" class="btn btn-outline" id="btn-explore-all-services">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span>Browse All Services</span>
+              </a>
+              <button type="button" class="btn btn-subtle" id="btn-hero-become-pro">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                <span>Become a Professional</span>
+              </button>
+            </div>
+
+            <!-- Prominent Emergency Service Button -->
+            <button type="button" class="btn btn-emergency btn-lg" id="btn-hero-emergency" aria-label="Emergency Service Dispatch">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span>🚨 Emergency Service (Water Leak / Spark)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Service Category Cards Grid (9 Categories) -->
+        <div style="margin-bottom: var(--space-10);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--space-4);">
+            <div>
+              <h2 style="font-size: var(--font-size-xl); margin-bottom: 4px;">Popular Service Categories</h2>
+              <p style="font-size: var(--font-size-sm); color: var(--text-muted);">Select a trade to instantly view available technicians within your radius</p>
+            </div>
+            <a href="#services" style="font-size: var(--font-size-sm); font-weight: 600;">View All &rarr;</a>
+          </div>
+
+          <div class="category-grid" id="category-grid-container">
+            <!-- 1. Electrician -->
+            <a href="#services" class="category-card" data-category="electrician">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
+              <span class="category-title">Electrician</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Short circuits, fans</span>
+            </a>
+
+            <!-- 2. Plumber -->
+            <a href="#services" class="category-card" data-category="plumber">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+              </div>
+              <span class="category-title">Plumber</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Leaks, taps, drains</span>
+            </a>
+
+            <!-- 3. Carpenter -->
+            <a href="#services" class="category-card" data-category="carpenter">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+              </div>
+              <span class="category-title">Carpenter</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Locks, doors, wood</span>
+            </a>
+
+            <!-- 4. AC Technician -->
+            <a href="#services" class="category-card" data-category="ac_technician">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path></svg>
+              </div>
+              <span class="category-title">AC Technician</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Gas, servicing, coils</span>
+            </a>
+
+            <!-- 5. Appliance Repair -->
+            <a href="#services" class="category-card" data-category="appliance">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"></rect><circle cx="12" cy="14" r="4"></circle><line x1="12" y1="6" x2="12.01" y2="6"></line></svg>
+              </div>
+              <span class="category-title">Appliance Repair</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Fridges, washers, RO</span>
+            </a>
+
+            <!-- 6. Mechanic -->
+            <a href="#services" class="category-card" data-category="mechanic">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </div>
+              <span class="category-title">Mechanic</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Punctures, jumpstarts</span>
+            </a>
+
+            <!-- 7. Cleaning -->
+            <a href="#services" class="category-card" data-category="cleaning">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+              </div>
+              <span class="category-title">Cleaning</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Deep sanitization, move-in</span>
+            </a>
+
+            <!-- 8. Painter -->
+            <a href="#services" class="category-card" data-category="painter">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M19 11V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h4"></path><path d="M16 16v6"></path><path d="M8 12h8"></path><path d="M12 8h4"></path></svg>
+              </div>
+              <span class="category-title">Painter</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Touchups, waterproofing</span>
+            </a>
+
+            <!-- 9. Other / Handyman -->
+            <a href="#services" class="category-card" data-category="other">
+              <div class="category-icon-wrap">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              </div>
+              <span class="category-title">Handyman & Other</span>
+              <span style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">Drilling, curtain rods</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 7. Section: How It Works (Customer & Worker) -->
+        <div class="info-section">
+          <div class="section-header-block">
+            <span class="badge badge-teal" style="margin-bottom: var(--space-2);">Simple & Transparent</span>
+            <h2>How Blue Collar Works</h2>
+            <p>Designed for complete clarity with zero predatory platform cuts</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6); margin-bottom: var(--space-6);">
+            <!-- Customer Journey -->
+            <div class="card">
+              <div class="card-header">
+                <span class="badge badge-default">For Residents & Students</span>
+                <span style="font-weight: 700; color: var(--primary);">Customer Flow</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div class="step-card">
+                  <div class="step-number">1</div>
+                  <h3 style="font-size: var(--font-size-base);">Detect Proximity</h3>
+                  <p style="font-size: var(--font-size-sm); margin: 0;">Use one-tap browser geolocation or type your landmark to discover nearest active technicians.</p>
+                </div>
+                <div class="step-card">
+                  <div class="step-number">2</div>
+                  <h3 style="font-size: var(--font-size-base);">Compare Fair Estimates</h3>
+                  <p style="font-size: var(--font-size-sm); margin: 0;">Inspect verified demo reviews, transparent visiting fees (₹99-₹149), and realistic distance-based ETAs.</p>
+                </div>
+                <div class="step-card">
+                  <div class="step-number">3</div>
+                  <h3 style="font-size: var(--font-size-base);">Live Tracking & Direct Pay</h3>
+                  <p style="font-size: var(--font-size-sm); margin: 0;">Track service status in real-time. Pay the technician directly without app commission markups.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Professional Journey -->
+            <div class="card">
+              <div class="card-header">
+                <span class="badge badge-teal">For Independent Tradespeople</span>
+                <span style="font-weight: 700; color: var(--accent-teal);">Worker Flow</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div class="step-card">
+                  <div class="step-number">1</div>
+                  <h3 style="font-size: var(--font-size-base);">Toggle Live Presence</h3>
+                  <p style="font-size: var(--font-size-sm); margin: 0;">Switch yourself online when ready to work. Your availability reflects instantly on the neighborhood map.</p>
+                </div>
+                <div class="step-card">
+                  <div class="step-number">2</div>
+                  <h3 style="font-size: var(--font-size-base);">Receive Direct Nearby Leads</h3>
+                  <p style="font-size: var(--font-size-sm); margin: 0;">Get localized booking and emergency alerts within 1-8 km radius with upfront problem descriptions.</p>
+                </div>
+                <div class="step-card">
+                  <div class="step-number">3</div>
+                  <h3 style="font-size: var(--font-size-base);">Retain 100% Earnings</h3>
+                  <p style="font-size: var(--font-size-sm); margin: 0;">Direct cash or UPI settlement on-site. Build your digital portfolio and neighborhood reputation.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Section: Why Blue Collar -->
+        <div class="info-section">
+          <div class="section-header-block">
+            <span class="badge badge-default" style="margin-bottom: var(--space-2);">Design Thinking Ethics</span>
+            <h2>Why Blue Collar?</h2>
+            <p>Solving the everyday pain points of unorganized home repairs</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4);">
+            <div class="card card-hover">
+              <div class="badge badge-teal" style="margin-bottom: var(--space-2);">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>Zero Dark Patterns</span>
+              </div>
+              <h3 style="font-size: var(--font-size-base); margin-bottom: var(--space-1);">Honest Academic Labels</h3>
+              <p style="font-size: var(--font-size-sm);">No fake artificial surge charges. All visiting fees and ETAs are explicitly labeled estimates.</p>
+            </div>
+
+            <div class="card card-hover">
+              <div class="badge badge-success" style="margin-bottom: var(--space-2);">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>Haversine Accuracy</span>
+              </div>
+              <h3 style="font-size: var(--font-size-base); margin-bottom: var(--space-1);">True Proximity Routing</h3>
+              <p style="font-size: var(--font-size-sm);">Mathematical sphere distance calculations using OpenStreetMap coordinates rather than arbitrary city zones.</p>
+            </div>
+
+            <div class="card card-hover">
+              <div class="badge badge-warning" style="margin-bottom: var(--space-2);">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span>Dual Data Sync</span>
+              </div>
+              <h3 style="font-size: var(--font-size-base); margin-bottom: var(--space-1);">Instant Multi-Tab Realtime</h3>
+              <p style="font-size: var(--font-size-sm);">BroadcastChannel and Firestore keep both customers and technicians synchronized simultaneously.</p>
+            </div>
+
+            <div class="card card-hover">
+              <div class="badge badge-info" style="margin-bottom: var(--space-2);">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>
+                <span>Accessible By Design</span>
+              </div>
+              <h3 style="font-size: var(--font-size-base); margin-bottom: var(--space-1);">WCAG AA Standards</h3>
+              <p style="font-size: var(--font-size-sm);">Visible focus rings, 44px touch areas, multi-sensory status indicators, and clean high-contrast text.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Section: New to the City Guide -->
+        <div class="newcomer-card">
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: center; justify-content: space-between;">
+            <div style="max-width: 640px;">
+              <span class="badge badge-success" style="margin-bottom: var(--space-2);">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                <span>New in Bengaluru or Relocating?</span>
+              </span>
+              <h2 style="font-size: var(--font-size-2xl); color: #064E3B; margin-bottom: var(--space-2);">Essential Move-in Tips for PG Tenants & Students</h2>
+              <p style="color: #065F46; font-size: var(--font-size-sm); line-height: 1.6; margin-bottom: var(--space-4);">
+                Moving into a new flat or hostel can be daunting. We have pre-curated the most critical day-1 checks: test the bathroom geyser before peak morning hours, check circuit breaker ratings for laptops and kettles, and save your neighborhood plumber's contact before emergencies strike.
+              </p>
+              <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                <button type="button" class="btn btn-teal btn-sm" id="btn-quick-newcomer-electrician">Find Move-In Electricians</button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-quick-newcomer-plumber">Find Emergency Plumbers</button>
+                <button type="button" class="btn btn-subtle btn-sm" id="btn-quick-newcomer-handyman">Find Furniture Handymen</button>
+              </div>
+            </div>
+            <div style="background-color: #FFFFFF; border: 1px solid #BBF7D0; border-radius: var(--radius-lg); padding: var(--space-4); min-width: 240px; box-shadow: var(--shadow-sm);">
+              <span style="font-size: 11px; font-weight: 700; color: #065F46; text-transform: uppercase;">Helpful Safety Numbers</span>
+              <ul style="list-style: none; padding: 0; margin-top: var(--space-2); font-size: var(--font-size-xs); line-height: 2; color: var(--text-main);">
+                <li>🚨 National Emergency: <strong>112</strong></li>
+                <li>🚒 Fire Control: <strong>101</strong></li>
+                <li>⚡ Electricity Helpline (BESCOM): <strong>1912</strong></li>
+                <li>💧 Water Supply Board: <strong>1916</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           VIEW: FIND SERVICES (#services) - Full Directory & Interactive Map
+           ==================================================================== -->
+      <section id="view-services" class="view-panel" aria-labelledby="services-heading">
+        
+        <div style="margin-bottom: var(--space-6);">
+          <div class="badge badge-teal" style="margin-bottom: var(--space-2);">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle></svg>
+            <span>Hyper-Local Discovery</span>
+          </div>
+          <h1 id="services-heading">Verified Local Service Professionals</h1>
+          <p>Real-time availability, Haversine proximity calculations, and interactive map synchronisation.</p>
+        </div>
+
+        <!-- 6. Filter & Search Combined Toolbar -->
+        <div class="filter-toolbar" role="search" aria-label="Filter and search local technicians">
+          <div class="filter-grid">
+            <!-- Keyword Search -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="services-search-keyword" class="form-label">Search Skill or Problem</label>
+              <input type="text" id="services-search-keyword" class="form-input" placeholder="e.g. MCB, tap leak, lock..." autocomplete="off">
+            </div>
+
+            <!-- Category Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="services-filter-category" class="form-label">Category</label>
+              <select id="services-filter-category" class="form-select">
+                <option value="all">All Categories</option>
+                <option value="electrician">Electrician</option>
+                <option value="plumber">Plumber</option>
+                <option value="carpenter">Carpenter</option>
+                <option value="ac_technician">AC Technician</option>
+                <option value="appliance">Appliance Repair</option>
+                <option value="mechanic">Mechanic</option>
+                <option value="cleaning">Cleaning</option>
+                <option value="painter">Painter</option>
+                <option value="other">Handyman & Other</option>
+              </select>
+            </div>
+
+            <!-- Distance Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="services-filter-distance" class="form-label">Max Distance</label>
+              <select id="services-filter-distance" class="form-select">
+                <option value="all">Any Distance</option>
+                <option value="2">Within 2 km</option>
+                <option value="5" selected>Within 5 km</option>
+                <option value="8">Within 8 km</option>
+                <option value="15">Within 15 km</option>
+              </select>
+            </div>
+
+            <!-- Minimum Rating Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="services-filter-rating" class="form-label">Minimum Rating</label>
+              <select id="services-filter-rating" class="form-select">
+                <option value="all">Any Rating</option>
+                <option value="4.5">★ 4.5 & Above</option>
+                <option value="4.7">★ 4.7 & Above</option>
+                <option value="4.8">★ 4.8 & Above</option>
+              </select>
+            </div>
+
+            <!-- Visiting Fee Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="services-filter-price" class="form-label">Max Visiting Fee</label>
+              <select id="services-filter-price" class="form-select">
+                <option value="all">Any Fee</option>
+                <option value="99">Under ₹100</option>
+                <option value="149">Under ₹150</option>
+                <option value="199">Under ₹200</option>
+              </select>
+            </div>
+
+            <!-- Sort By -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="services-sort-by" class="form-label">Sort By</label>
+              <select id="services-sort-by" class="form-select">
+                <option value="distance_asc">Distance (Nearest First)</option>
+                <option value="rating_desc">Rating (Highest First)</option>
+                <option value="fee_asc">Visiting Fee (Lowest First)</option>
+                <option value="experience_desc">Experience (Most Senior)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Active filters & reset bar -->
+          <div class="filter-results-bar">
+            <div style="display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: var(--font-size-sm); font-weight: 500;">
+                <input type="checkbox" id="services-filter-available-only" style="width: 18px; height: 18px; accent-color: var(--accent-teal);">
+                <span>Available Now Only</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: var(--font-size-sm); font-weight: 500;">
+                <input type="checkbox" id="services-filter-saved-only" style="width: 18px; height: 18px; accent-color: var(--accent-teal);">
+                <span style="display: flex; align-items: center; gap: 4px;">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: var(--primary);"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                  <span>Saved Only (<span id="saved-pros-count">0</span>)</span>
+                </span>
+              </label>
+              <span id="services-results-count" style="font-size: var(--font-size-xs); color: var(--text-muted); font-weight: 600;">
+                Showing 10 professionals
+              </span>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <button type="button" class="btn btn-subtle btn-sm" id="btn-reset-filters">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                <span>Reset Filters</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location Context Indicator -->
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-4); background-color: var(--bg-surface); padding: var(--space-2) var(--space-4); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+          <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-xs);">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" style="color: var(--accent-teal);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+            <span>Showing results near: <strong id="services-active-location-label">Bengaluru, Karnataka</strong></span>
+          </div>
+          <button type="button" class="btn btn-subtle btn-sm" id="btn-services-change-location" style="min-height: 28px; padding: 2px 8px;">
+            <span>Change Location</span>
+          </button>
+        </div>
+
+        <!-- 5. Split Directory Layout: Cards List (Left) + OpenStreetMap (Right) -->
+        <div class="services-split-layout">
+          
+          <!-- Left Column: Professional Cards List -->
+          <div class="services-list-column">
+            
+            <!-- Skeleton Loading State (Shown during location reload / filter search) -->
+            <div id="services-skeleton-container" style="display: none; flex-direction: column; gap: var(--space-3);">
+              <div class="skeleton-card">
+                <div style="display: flex; gap: var(--space-3); align-items: center;">
+                  <div class="skeleton skeleton-circle"></div>
+                  <div style="flex: 1;">
+                    <div class="skeleton skeleton-text" style="width: 50%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 30%;"></div>
+                  </div>
+                </div>
+                <div class="skeleton skeleton-text" style="width: 90%; height: 28px;"></div>
+              </div>
+              <div class="skeleton-card">
+                <div style="display: flex; gap: var(--space-3); align-items: center;">
+                  <div class="skeleton skeleton-circle"></div>
+                  <div style="flex: 1;">
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 40%;"></div>
+                  </div>
+                </div>
+                <div class="skeleton skeleton-text" style="width: 80%; height: 28px;"></div>
+              </div>
+            </div>
+
+            <!-- Dynamic Cards Container -->
+            <div id="services-cards-list" style="display: flex; flex-direction: column; gap: var(--space-3);">
+              <!-- Rendered via JS -->
+            </div>
+
+            <!-- Empty State (When no professionals match filters) -->
+            <div id="services-empty-state" class="empty-state" style="display: none;">
+              <div class="empty-state-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <h2 class="empty-state-title">No Professionals Match Filters</h2>
+              <p class="empty-state-desc">Try increasing the search distance, unchecking "Available Now Only", or selecting "All Categories".</p>
+              <button type="button" class="btn btn-primary" id="btn-empty-reset">Reset All Filters</button>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Interactive Leaflet Map -->
+          <div class="sticky-map-column">
+            <div class="map-container" id="services-leaflet-map" aria-label="Interactive map showing nearby professionals"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-2); font-size: 11px; color: var(--text-subtle);">
+              <span>Map markers update dynamically with filters</span>
+              <span>Click a pin to view technician</span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           VIEW: MY BOOKINGS (#bookings - Customer View)
+           ==================================================================== -->
+      <section id="view-bookings" class="view-panel" aria-labelledby="bookings-heading">
+        <div style="margin-bottom: var(--space-6);">
+          <div class="badge badge-default" style="margin-bottom: var(--space-2);">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect></svg>
+            <span>Customer Portal</span>
+          </div>
+          <h1 id="bookings-heading">My Service Bookings</h1>
+          <p>Track live service requests, ETA, technician status, and completion feedback.</p>
+        </div>
+
+        <!-- Empty State Component Demo -->
+        <div class="empty-state">
+          <div class="empty-state-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <h2 class="empty-state-title">No Active Bookings Found</h2>
+          <p class="empty-state-desc">You currently have no scheduled or emergency service requests. Browse nearby technicians to create a request.</p>
+          <a href="#services" class="btn btn-primary">Find a Technician</a>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW: WORKER DASHBOARD (#dashboard - Professional View)
+           ==================================================================== -->
+      <section id="view-dashboard" class="view-panel" aria-labelledby="dashboard-heading">
+        <div style="margin-bottom: var(--space-6);">
+          <div class="badge badge-teal" style="margin-bottom: var(--space-2);">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect></svg>
+            <span>Technician Portal</span>
+          </div>
+          <h1 id="dashboard-heading">Professional Workstation</h1>
+          <p>Manage your availability status, incoming leads, active job dispatches, and earnings.</p>
+        </div>
+
+        <div class="card" style="margin-bottom: var(--space-6);">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Live Availability Status</h2>
+              <p class="card-subtitle">Toggle online to broadcast your location to customers seeking emergency assistance</p>
+            </div>
+            <div id="worker-status-badge">
+              <span class="badge badge-success">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Online & Ready for Jobs</span>
+              </span>
+            </div>
+          </div>
+          <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+            <button type="button" class="btn btn-teal" id="btn-toggle-availability">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              <span>Toggle Live Presence</span>
+            </button>
+            <button type="button" class="btn btn-outline" id="btn-simulate-job">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>Simulate Incoming Emergency Request</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title" style="margin-bottom: var(--space-3);">Incoming Job Requests Feed</h2>
+          <p class="card-body">Real-time dispatches received via Firestore or Local BroadcastChannel will be listed here with acceptance and transit controls (Chunk 3).</p>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW: ABOUT (#about)
+           ==================================================================== -->
+      <section id="view-about" class="view-panel" aria-labelledby="about-heading">
+        <div style="max-width: 800px;">
+          <h1 id="about-heading" style="margin-bottom: var(--space-3);">Design Thinking Project Concept</h1>
+          <p style="margin-bottom: var(--space-6); font-size: var(--font-size-lg);">
+            Blue Collar is an applied academic inquiry tackling urban fragmentation in unorganized local service markets.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+            <div class="card">
+              <h2 class="card-title" style="margin-bottom: var(--space-2);">1. Empathize & Define</h2>
+              <p class="card-body">Target personas: Students in PGs with urgent leaking taps, corporate workers returning late facing tripped circuit breakers, and senior residents seeking trusted mechanics without predatory charges.</p>
+            </div>
+            <div class="card">
+              <h2 class="card-title" style="margin-bottom: var(--space-2);">2. Ideate & Prototype</h2>
+              <p class="card-body">A responsive zero-overhead web platform using native web standards, direct geocoding, live availability toggles, and dual-mode data synchronization.</p>
+            </div>
+            <div class="card">
+              <h2 class="card-title" style="margin-bottom: var(--space-2);">3. Ethical Architecture</h2>
+              <p class="card-body">No dark patterns, no inflated fake reviews, strict demonstration labels, and privacy preservation via client-side storage fallbacks.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW: CONTACT (#contact)
+           ==================================================================== -->
+      <section id="view-contact" class="view-panel" aria-labelledby="contact-heading">
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+          <h1 id="contact-heading" class="card-title" style="margin-bottom: var(--space-2);">Contact & Project Feedback</h1>
+          <p class="card-subtitle" style="margin-bottom: var(--space-4);">Provide feedback on our Design Thinking prototype or request feature enhancements.</p>
+          <form id="contact-form" onsubmit="event.preventDefault(); window.blueCollarApp.handleContactSubmit();">
+            <div class="form-group">
+              <label for="contact-name" class="form-label form-label-required">Full Name</label>
+              <input type="text" id="contact-name" class="form-input" required placeholder="e.g. Ramya Sharma">
+            </div>
+            <div class="form-group">
+              <label for="contact-email" class="form-label form-label-required">Email Address</label>
+              <input type="email" id="contact-email" class="form-input" required placeholder="ramya@example.com">
+            </div>
+            <div class="form-group">
+              <label for="contact-msg" class="form-label form-label-required">Feedback Message</label>
+              <textarea id="contact-msg" class="form-textarea" required placeholder="What worked well? What felt confusing?"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Feedback</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW: HELP (#help)
+           ==================================================================== -->
+      <section id="view-help" class="view-panel" aria-labelledby="help-heading">
+        <div style="max-width: 800px; margin: 0 auto;">
+          <h1 id="help-heading" style="margin-bottom: var(--space-4);">Help & Frequently Asked Questions</h1>
+          <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+            <div class="card">
+              <h2 class="card-title" style="font-size: var(--font-size-base); margin-bottom: var(--space-1);">Are the listed technicians real?</h2>
+              <p class="card-body">No. As this is an academic prototype for college evaluation, all service technicians are fictional demo profiles to test booking flows safely.</p>
+            </div>
+            <div class="card">
+              <h2 class="card-title" style="font-size: var(--font-size-base); margin-bottom: var(--space-1);">How does real-time synchronization work without a backend?</h2>
+              <p class="card-body">We employ a dual-adapter pattern: when Firebase credentials are configured in <code>js/config.js</code>, Firestore onSnapshot is utilized; otherwise, the app seamlessly falls back to <code>BroadcastChannel</code> + <code>localStorage</code> for multi-tab live sync.</p>
+            </div>
+            <div class="card">
+              <h2 class="card-title" style="font-size: var(--font-size-base); margin-bottom: var(--space-1);">How do I test both Customer and Worker roles simultaneously?</h2>
+              <p class="card-body">Open two browser windows or tabs. Set one to <strong>Customer</strong> and the other to <strong>Professional</strong>. Any presence updates or simulated bookings will sync instantly across both!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW: PRIVACY (#privacy)
+           ==================================================================== -->
+      <section id="view-privacy" class="view-panel" aria-labelledby="privacy-heading">
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+          <h1 id="privacy-heading" class="card-title" style="margin-bottom: var(--space-3);">Privacy Policy (Academic Prototype)</h1>
+          <p class="card-body" style="margin-bottom: var(--space-3);">
+            This website runs entirely on client-side vanilla JavaScript. Location coordinates obtained through browser Geolocation are retained strictly in your browser session for distance calculations via OpenStreetMap and are never transmitted to third-party ad networks or sold.
+          </p>
+          <p class="card-body">
+            You may clear your browser's LocalStorage at any time to purge all local mock bookings and preferences.
+          </p>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW: TERMS (#terms)
+           ==================================================================== -->
+      <section id="view-terms" class="view-panel" aria-labelledby="terms-heading">
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+          <h1 id="terms-heading" class="card-title" style="margin-bottom: var(--space-3);">Terms of Academic Use</h1>
+          <p class="card-body" style="margin-bottom: var(--space-3);">
+            Blue Collar is constructed strictly for academic, design thinking, and educational demonstration. No actual monetary payments are processed, no emergency services are dispatched to physical homes, and all credentials are demo representations.
+          </p>
+          <div class="badge badge-warning">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>Emergency notice: For real-world life-threatening emergencies, dial 112 directly.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW: PROTOTYPE TESTING (#testing)
+           Design Thinking Stakeholder Evaluation & Real-Time Feedback Analytics
+           ==================================================================== -->
+      <section id="view-testing" class="view-panel" aria-labelledby="testing-heading">
+        <div style="margin-bottom: var(--space-6);">
+          <div class="badge badge-teal" style="margin-bottom: var(--space-2);">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>Design Thinking Stakeholder Evaluation</span>
+          </div>
+          <h1 id="testing-heading">Prototype Testing & Evaluation</h1>
+          <p>
+            Stakeholder evaluation across ease of discovery, profile clarity, pricing transparency, booking workflow, and user trust.
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-6); align-items: start;">
+          <!-- 1. Evaluation Form Card -->
+          <div class="card" style="padding: var(--space-5);">
+            <h2 style="font-size: var(--font-size-base); margin-bottom: var(--space-2); color: var(--primary);">
+              Submit Test Feedback
+            </h2>
+            <p style="font-size: var(--font-size-xs); color: var(--text-muted); margin-bottom: var(--space-4);">
+              Rate your experience on a 1 (Poor) to 5 (Outstanding) scale based on your test session:
+            </p>
+
+            <form id="testing-feedback-form">
+              <!-- Metric 1: Ease of Finding a Service -->
+              <div style="margin-bottom: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">
+                    1. Ease of finding a local service
+                  </span>
+                  <span class="badge badge-default" id="val-discovery-badge">5 / 5</span>
+                </div>
+                <div style="display: flex; gap: var(--space-2);" data-metric="discovery">
+                  <button type="button" class="testing-score-pill" data-val="1">1</button>
+                  <button type="button" class="testing-score-pill" data-val="2">2</button>
+                  <button type="button" class="testing-score-pill" data-val="3">3</button>
+                  <button type="button" class="testing-score-pill" data-val="4">4</button>
+                  <button type="button" class="testing-score-pill is-selected" data-val="5">5</button>
+                </div>
+              </div>
+
+              <!-- Metric 2: Profile Clarity -->
+              <div style="margin-bottom: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">
+                    2. Profile clarity & technician details
+                  </span>
+                  <span class="badge badge-default" id="val-profile-badge">5 / 5</span>
+                </div>
+                <div style="display: flex; gap: var(--space-2);" data-metric="profile">
+                  <button type="button" class="testing-score-pill" data-val="1">1</button>
+                  <button type="button" class="testing-score-pill" data-val="2">2</button>
+                  <button type="button" class="testing-score-pill" data-val="3">3</button>
+                  <button type="button" class="testing-score-pill" data-val="4">4</button>
+                  <button type="button" class="testing-score-pill is-selected" data-val="5">5</button>
+                </div>
+              </div>
+
+              <!-- Metric 3: Price Clarity -->
+              <div style="margin-bottom: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">
+                    3. Price clarity & estimate transparency
+                  </span>
+                  <span class="badge badge-default" id="val-pricing-badge">5 / 5</span>
+                </div>
+                <div style="display: flex; gap: var(--space-2);" data-metric="pricing">
+                  <button type="button" class="testing-score-pill" data-val="1">1</button>
+                  <button type="button" class="testing-score-pill" data-val="2">2</button>
+                  <button type="button" class="testing-score-pill" data-val="3">3</button>
+                  <button type="button" class="testing-score-pill" data-val="4">4</button>
+                  <button type="button" class="testing-score-pill is-selected" data-val="5">5</button>
+                </div>
+              </div>
+
+              <!-- Metric 4: Booking Ease -->
+              <div style="margin-bottom: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">
+                    4. Booking ease & wizard flow
+                  </span>
+                  <span class="badge badge-default" id="val-booking-badge">5 / 5</span>
+                </div>
+                <div style="display: flex; gap: var(--space-2);" data-metric="booking">
+                  <button type="button" class="testing-score-pill" data-val="1">1</button>
+                  <button type="button" class="testing-score-pill" data-val="2">2</button>
+                  <button type="button" class="testing-score-pill" data-val="3">3</button>
+                  <button type="button" class="testing-score-pill" data-val="4">4</button>
+                  <button type="button" class="testing-score-pill is-selected" data-val="5">5</button>
+                </div>
+              </div>
+
+              <!-- Metric 5: Trust & Reliability -->
+              <div style="margin-bottom: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">
+                    5. Trust & reliability perception
+                  </span>
+                  <span class="badge badge-default" id="val-trust-badge">5 / 5</span>
+                </div>
+                <div style="display: flex; gap: var(--space-2);" data-metric="trust">
+                  <button type="button" class="testing-score-pill" data-val="1">1</button>
+                  <button type="button" class="testing-score-pill" data-val="2">2</button>
+                  <button type="button" class="testing-score-pill" data-val="3">3</button>
+                  <button type="button" class="testing-score-pill" data-val="4">4</button>
+                  <button type="button" class="testing-score-pill is-selected" data-val="5">5</button>
+                </div>
+              </div>
+
+              <!-- Persona Select -->
+              <div class="form-group" style="margin-bottom: var(--space-3);">
+                <label for="testing-tester-role">Tester Persona / Background:</label>
+                <select id="testing-tester-role" class="form-select">
+                  <option value="Apartment Resident (Family)">Apartment Resident (Family)</option>
+                  <option value="Student (Hostel / Flat)">Student (Hostel / Flat)</option>
+                  <option value="PG Tenant">PG Tenant</option>
+                  <option value="City Newcomer">City Newcomer</option>
+                  <option value="Academic Reviewer / Faculty" selected>Academic Reviewer / Faculty</option>
+                </select>
+              </div>
+
+              <!-- Comment -->
+              <div class="form-group" style="margin-bottom: var(--space-4);">
+                <label for="testing-comment">Qualitative Feedback & Observations (Optional):</label>
+                <textarea id="testing-comment" class="form-textarea" rows="3" placeholder="e.g. Real-time emergency matching and live map tracking without needing an account works smoothly..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Submit Evaluation Feedback</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- 2. Results Summary & Aggregate Analytics -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+            <!-- Aggregate Card -->
+            <div class="card" style="padding: var(--space-5);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                <div>
+                  <h3 style="font-size: var(--font-size-base); margin: 0; color: var(--primary);">Results Summary</h3>
+                  <div style="font-size: 11px; color: var(--text-subtle);">Stored locally with real timestamps</div>
+                </div>
+                <div style="text-align: right;">
+                  <span id="summary-overall-score" style="font-size: 28px; font-weight: 800; color: var(--accent-teal);">4.8</span>
+                  <span style="font-size: 12px; color: var(--text-muted);">/ 5.0</span>
+                  <div id="summary-total-responses" style="font-size: 11px; color: var(--text-subtle);">From 3 responses</div>
+                </div>
+              </div>
+
+              <!-- Breakdown Bars -->
+              <div style="display: flex; flex-direction: column; gap: var(--space-3);" id="summary-metric-bars">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Recent Feedback Responses -->
+            <div class="card" style="padding: var(--space-5);">
+              <h3 style="font-size: var(--font-size-sm); margin-bottom: var(--space-3); color: var(--primary);">
+                Recent Stakeholder Test Entries
+              </h3>
+              <div id="testing-recent-entries" style="display: flex; flex-direction: column; gap: var(--space-3); max-height: 320px; overflow-y: auto;">
+                <!-- Entries populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Accessible Demo Modal -->
+    <div class="modal-backdrop" id="demo-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modal-title" class="modal-title">College Project Scope & Guidelines</h2>
+          <button type="button" class="modal-close-btn" id="btn-close-modal" aria-label="Close dialog">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: var(--space-3);">
+            Welcome to the <strong>Blue Collar — Local Service Finder</strong> prototype.
+          </p>
+          <ul style="padding-left: var(--space-4); margin-bottom: var(--space-3); line-height: 1.8;">
+            <li><strong>Design System:</strong> Clean light theme, 8px grid, WCAG AA contrast, 44px touch targets.</li>
+            <li><strong>Real-time Architecture:</strong> Dual-adapter with automatic fallback to BroadcastChannel.</li>
+            <li><strong>Role Switcher:</strong> Instantly toggle between Customer and Professional modes to test both sides of the marketplace.</li>
+          </ul>
+          <div class="badge badge-teal">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Chunk 1 Foundation Verified</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="btn-confirm-modal">Got it, continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Faculty Demo Script & Presentation Controls Modal -->
+    <div class="modal-backdrop" id="demo-script-modal" role="dialog" aria-modal="true" aria-labelledby="demo-script-title" aria-hidden="true">
+      <div class="modal-dialog" style="max-width: 650px;">
+        <div class="modal-header">
+          <div>
+            <span class="badge badge-teal" style="margin-bottom: 4px;">Faculty Presentation Guide</span>
+            <h2 id="demo-script-title" style="margin: 0; font-size: var(--font-size-lg);">
+              Interactive Demo Script & Quick Controls
+            </h2>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm btn-close-demo-modal" aria-label="Close dialog">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="modal-body" style="padding: var(--space-4);">
+          <!-- Baseline Reset Bar -->
+          <div class="card" style="background: var(--bg-subtle); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-2);">
+            <div>
+              <strong style="font-size: 13px; color: var(--text-main);">One-Click Clean Baseline Reset</strong>
+              <div style="font-size: 11px; color: var(--text-muted);">Reloads pristine seed professionals, bookings, presence, and test responses.</div>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-reload-seed-data" style="color: var(--status-danger); border-color: var(--status-danger);">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              <span>Reset to Clean Baseline</span>
+            </button>
+          </div>
+
+          <!-- Step-by-Step Presentation Checklist -->
+          <h3 style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: 0.05em;">
+            Faculty Demo Script Checklist
+          </h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: var(--space-3);">
+            Check off steps as you demonstrate the prototype live to the review panel:
+          </p>
+
+          <div class="demo-script-checklist" id="faculty-checklist-container" style="display: flex; flex-direction: column; gap: var(--space-2);">
+            <!-- Dynamically populated or rendered -->
+          </div>
+        </div>
+
+        <div class="modal-footer" style="padding: var(--space-3) var(--space-4); display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" class="btn btn-outline btn-sm" id="btn-clear-checklist">Reset Checklist</button>
+          <button type="button" class="btn btn-primary btn-sm btn-close-demo-modal">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Site Footer -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-inner">
+        <div class="footer-main">
+          <div class="footer-brand">
+            <div class="brand" style="margin-bottom: var(--space-2);">
+              <div class="brand-icon">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+              </div>
+              <span class="brand-name">Blue Collar</span>
+            </div>
+            <p style="font-size: var(--font-size-xs); line-height: 1.6;">
+              Design Thinking Project connecting neighborhood residents, students, and workers with dependable local tradespeople.
+            </p>
+          </div>
+          <div class="footer-links-group">
+            <div class="footer-col">
+              <span class="footer-col-title">Navigation</span>
+              <a href="#home" class="footer-link">Home</a>
+              <a href="#services" class="footer-link">Find Services</a>
+              <a href="#bookings" class="footer-link">My Bookings</a>
+            </div>
+            <div class="footer-col">
+              <span class="footer-col-title">Academic Study</span>
+              <a href="#about" class="footer-link">Design Thinking Concept</a>
+              <a href="#contact" class="footer-link">Feedback & Contact</a>
+              <a href="#help" class="footer-link">Help & FAQs</a>
+            </div>
+            <div class="footer-col">
+              <span class="footer-col-title">Legal & Trust</span>
+              <a href="#privacy" class="footer-link">Privacy Policy</a>
+              <a href="#terms" class="footer-link">Terms of Demo Use</a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>&copy; 2026 Blue Collar Academic Prototype. Built with vanilla HTML5, CSS3, & ES Modules.</span>
+          <span class="academic-badge">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            <span>Demo Data & Estimates Only</span>
+          </span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Main JavaScript App (ES Module) -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
